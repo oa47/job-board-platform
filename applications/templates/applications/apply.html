@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Apply for {{ job.title }} | Job Board Platform{% endblock %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 800px; margin: 2rem auto;">
+    <div class="card">
+        <h2 style="margin-bottom: 1rem;">Apply for: <span style="color: var(--primary-color);">{{ job.title }}</span></h2>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Employer: {{ job.employer.username }}</p>
+        
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label style="font-weight: 500; display: block; margin-bottom: 0.5rem;">Cover Letter</label>
+                {{ form.cover_letter }}
+                {% if form.cover_letter.errors %}
+                <div style="color: #e74c3c; font-size: 0.85rem; margin-top: 0.25rem;">{{ form.cover_letter.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label style="font-weight: 500; display: block; margin-bottom: 0.5rem;">Resume (PDF/DOCX)</label>
+                {{ form.resume }}
+                {% if form.resume.errors %}
+                <div style="color: #e74c3c; font-size: 0.85rem; margin-top: 0.25rem;">{{ form.resume.errors }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 0.75rem;">Submit Application</button>
+            <div style="text-align: center; margin-top: 1rem;">
+                <a href="{% url 'jobs:detail' job.id %}" style="color: var(--text-secondary); text-decoration: none;">Cancel and return to job details</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

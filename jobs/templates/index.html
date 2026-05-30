@@ -1,5 +1,39 @@
-{% if name %}
-    <h1>hello {{ name }}</h1>
-{% else %}
-    <h1>hello, world!</h1>
-{% endif %}
+{% extends 'base.html' %}
+
+{% block title %}Home | Job Board Platform{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 4rem 0; margin-bottom: 2rem;">
+    <h1 style="font-size: 2.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">Welcome to JobBoard.</h1>
+    <p style="font-size: 1.125rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto 2rem;">Find your next opportunity or post a job today! The best platform to connect amazing talent with top employers.</p>
+    <a href="{% url 'jobs:list' %}" class="btn btn-primary" style="font-size: 1.125rem; padding: 0.75rem 2rem;">Browse All Jobs</a>
+</div>
+
+<div>
+    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem;">Featured Jobs</h2>
+    
+    {% if jobs %}
+        <div class="grid grid-cols-3">
+            {% for job in jobs %}
+                <div class="card" style="display: flex; flex-direction: column;">
+                    <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">
+                        <a href="{% url 'jobs:detail' job.id %}" style="color: var(--text-primary); text-decoration: none;">{{ job.title }}</a>
+                    </h3>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.25rem;">
+                        <span style="font-weight: 500; color: var(--primary-color);">{{ job.employer.username }}</span> &bull; {{ job.location }}
+                    </p>
+                    <p style="color: var(--text-secondary); margin: 1rem 0; font-size: 0.95rem; flex-grow: 1;">
+                        {{ job.description|truncatewords:15 }}
+                    </p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                        <span class="badge" style="background: #E5E7EB; color: #4B5563;">{{ job.get_job_type_display }}</span>
+                        <a href="{% url 'jobs:detail' job.id %}" class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.875rem;">View</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-secondary">No jobs available at the moment. Please check back later.</p>
+    {% endif %}
+</div>
+{% endblock %}

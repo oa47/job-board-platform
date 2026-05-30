@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ job.title }} | Job Board Platform{% endblock %}
+
+{% block content %}
+<div>
+    <a href="{% url 'jobs:list' %}" style="display: inline-block; margin-bottom: 1.5rem; color: var(--text-secondary); text-decoration: none; font-weight: 500;">
+        &larr; Back to Jobs
+    </a>
+
+    <div style="display: flex; gap: 2rem; align-items: flex-start;">
+        <div style="flex: 1;">
+            <div class="card" style="margin-bottom: 2rem; padding: 2rem;">
+                <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ job.title }}</h1>
+                <p style="font-size: 1.1rem; color: var(--primary-color); font-weight: 500; margin-bottom: 1.5rem;">{{ job.employer.username }}</p>
+                
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                    <span class="badge" style="background: #E5E7EB; color: #4B5563; font-size: 0.85rem; padding: 0.4rem 1rem;">{{ job.get_job_type_display }}</span>
+                    <span style="display: flex; align-items: center; color: var(--text-secondary); font-size: 0.95rem;">📍 {{ job.location }}</span>
+                    <span style="display: flex; align-items: center; font-weight: 600; color: var(--secondary-color); font-size: 0.95rem;">💰 ${{ job.salary_min|default:"N/A" }} - ${{ job.salary_max|default:"N/A" }}</span>
+                </div>
+
+                <div style="border-top: 1px solid var(--border-color); padding-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Job Description</h3>
+                    <div style="line-height: 1.7; color: var(--text-primary); white-space: pre-wrap; font-size: 1rem;">{{ job.description }}</div>
+                </div>
+
+                <div style="margin-top: 3rem;">
+                    {% if user.is_authenticated and user.role == 'employer' %}
+                        <!-- Employers cannot apply, so show nothing -->
+                    {% else %}
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'applications:apply' job.id %}" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1.1rem;">Apply Now</a>
+                        {% else %}
+                            <a href="#" onclick="showAuthNotification(event, 'apply')" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1.1rem;">Apply Now</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div style="width: 320px;">
+            <div class="card" style="position: sticky; top: 100px;">
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">Quick Info</h3>
+                
+                <div style="display: grid; gap: 1.25rem; font-size: 0.95rem;">
+                    <div>
+                        <strong style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Employer</strong>
+                        <span style="font-weight: 500; display: block;">{{ job.employer.get_full_name|default:job.employer.username }}</span>
+                        {% if user.is_authenticated and user.id != job.employer.id %}
+                        <button onclick="startChatWithUser({{ job.employer.id }})" style="margin-top: 8px; background: none; border: 1px solid var(--primary-color); color: var(--primary-color); border-radius: 4px; padding: 4px 10px; cursor: pointer; font-size: 0.85rem;"><i class="fas fa-comment"></i> Message Employer</button>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <strong style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Posted Date</strong>
+                        <span>{{ job.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    <div>
+                        <strong style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Total Applications</strong>
+                        <span class="badge badge-accepted">{{ job.applications.count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Job Board Platform{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body data-user-id="{{ request.user.id|default:'' }}">
+    <header>
+        <nav>
+            <h1><a href="/">JobBoard.</a></h1>
+            <div class="nav-links">
+                <a href="{% url 'jobs:list' %}">Browse Jobs</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'users:profile' %}">Profile</a>
+                    <a href="{% url 'chat:index' %}">Messages</a>
+                    <a href="{% url 'jobs:create' %}">Post a Job</a>
+                    {% if user.is_superuser %}
+                        <a href="{% url 'custom_admin:dashboard' %}">Admin Dashboard</a>
+                    {% else %}
+                        <a href="{% url 'auth_app:dashboard' %}">My Dashboard</a>
+                    {% endif %}
+                    <a href="{% url 'auth_app:logout' %}" class="btn-nav">Logout ({{ user.username }})</a>
+                {% else %}
+                    <a href="#" onclick="showAuthNotification(event, 'post')">Post a Job</a>
+                    <a href="{% url 'auth_app:login' %}" class="btn-nav">Login</a>
+                    <a href="{% url 'auth_app:register' %}" class="btn btn-secondary" style="color: black; padding: 0.4rem 1rem;">Sign Up</a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        {% if messages %}
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    {% for message in messages %}
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: '{% if message.tags == "error" %}error{% elif message.tags == "warning" %}warning{% elif message.tags == "info" %}info{% else %}success{% endif %}',
+                            title: '{{ message|escapejs }}',
+                            showConfirmButton: false,
+                            timer: 4000,
+                            timerProgressBar: true
+                        });
+                    {% endfor %}
+                });
+            </script>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Job Board Platform. All rights reserved.</p>
+    </footer>
+
+    {% if user.is_authenticated %}
+    <style>
+        /* Floating Chat Redesign styles */
+        #chat-floating-widget {
+            border: 1px solid #e5e7eb !important;
+            border-radius: 10px !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background: white;
+            transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .chat-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 48px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .chat-header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-user-avatar-container {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+        }
+
+        .chat-user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .chat-user-avatar-placeholder {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #e0f2fe;
+            color: #0369a1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .chat-online-badge {
+            position: absolute;
+            bottom: -1px;
+            right: -1px;
+            width: 9px;
+            height: 9px;
+            background-color: #22c55e;
+            border: 1.5px solid #ffffff;
+            border-radius: 50%;
+        }
+
+        .chat-header-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .chat-header-right {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .chat-header-btn {
+            background: none;
+            border: none;
+            color: #4b5563;
+            padding: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .chat-header-btn:hover {
+            background-color: #f3f4f6;
+            color: #111827;
+        }
+
+        /* Search Bar styling */
+        .chat-search-container {
+            padding: 10px 12px;
+            background: #ffffff;
+        }
+
+        .chat-search-wrapper {
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 4px 8px;
+        }
+
+        .chat-search-input {
+            border: none;
+            background: transparent;
+            padding: 4px 6px;
+            font-size: 0.85rem;
+            outline: none;
+            flex-grow: 1;
+            color: #111827;
+            width: 100%;
+        }
+
+        .chat-search-input::placeholder {
+            color: #9ca3af;
+        }
+
+
+
+        /* Conversations List */
+        .chat-conversations-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            background: #ffffff;
+        }
+
+        .chat-conv-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .chat-conv-item:hover, .chat-conv-item.active {
+            background-color: #eef3f8;
+        }
+
+        .chat-conv-item-left {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .chat-conv-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .chat-conv-avatar-placeholder {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #f3f4f6;
+            color: #4b5563;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .chat-conv-item-middle {
+            flex-grow: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-conv-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #111827;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-conv-lastmsg {
+            font-size: 0.75rem;
+            color: #6b7280;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        .chat-conv-item-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .chat-conv-time {
+            font-size: 0.7rem;
+            color: #9ca3af;
+        }
+
+        .chat-conv-unread-badge {
+            background-color: #0a66c2;
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: bold;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 9999px;
+            padding: 0 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Chat View Panel */
+        .chat-panel-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 48px;
+        }
+
+        .chat-panel-header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .chat-panel-back-btn {
+            background: none;
+            border: none;
+            color: #4b5563;
+            padding: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-panel-back-btn:hover {
+            background-color: #f3f4f6;
+        }
+
+        .chat-panel-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #111827;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Chat Messages */
+        .chat-messages-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 12px;
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-bubble-container {
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+        }
+
+        .chat-bubble-container.me {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .chat-bubble-container.other {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        .chat-bubble {
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 0.825rem;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .chat-bubble-container.me .chat-bubble {
+            background-color: #0a66c2;
+            color: #ffffff;
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-bubble-container.other .chat-bubble {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            border-bottom-left-radius: 2px;
+        }
+
+        .chat-bubble-time {
+            font-size: 0.65rem;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        /* Message Input area */
+        .chat-input-container {
+            padding: 8px 12px;
+            background: #ffffff;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .chat-input-form {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-input-field {
+            flex-grow: 1;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            outline: none;
+            color: #111827;
+            background-color: #f9fafb;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        .chat-input-field:focus {
+            border-color: #0a66c2;
+            background-color: #ffffff;
+        }
+
+        .chat-send-btn {
+            background-color: #0a66c2;
+            color: #ffffff;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+            transition: background-color 0.2s;
+        }
+
+        .chat-send-btn:hover {
+            background-color: #084e96;
+        }
+    </style>
+
+    <!-- Floating Chat Widget -->
+    <button id="chat-fab" style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background-color: var(--primary-color, #0d6efd); color: white; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; z-index: 1000;">
+        <i class="fas fa-comment-dots fa-2x"></i>
+    </button>
+
+    <div id="chat-floating-widget" style="display: none; position: fixed; bottom: 100px; right: 30px; width: 350px; height: 500px; z-index: 1000; flex-direction: column;">
+        
+        <!-- List Panel -->
+        <div id="chat-floating-list-panel" style="display: flex; flex-direction: column; height: 100%;">
+            <div class="chat-header">
+                <div class="chat-header-left">
+                    <div class="chat-user-avatar-container">
+                        {% if request.user.profile.profile_picture %}
+                            <img src="{{ request.user.profile.profile_picture.url }}" class="chat-user-avatar" alt="{{ request.user.username }}">
+                        {% else %}
+                            <div class="chat-user-avatar-placeholder">{{ request.user.username|slice:":1"|upper }}</div>
+                        {% endif %}
+                        <span class="chat-online-badge"></span>
+                    </div>
+                    <span class="chat-header-title">Messaging</span>
+                </div>
+                <div class="chat-header-right">
+                    <button class="chat-header-btn" id="chat-options-btn" title="Options"><i class="fas fa-ellipsis-h"></i></button>
+                    <button class="chat-header-btn new-chat-btn" id="chat-new-btn" title="New Chat"><i class="far fa-edit"></i></button>
+                    <button class="chat-header-btn" id="close-chat-widget" title="Minimize"><i class="fas fa-chevron-down"></i></button>
+                </div>
+            </div>
+            
+            <div class="chat-search-container">
+                <div class="chat-search-wrapper">
+                    <i class="fas fa-search" style="color: #9ca3af; margin-left: 6px; margin-right: 6px; font-size: 0.85rem;"></i>
+                    <input type="text" id="chat-search-input" class="chat-search-input" placeholder="Search messages" autocomplete="off">
+                    <i class="fas fa-sliders-h" style="color: #9ca3af; margin-right: 6px; font-size: 0.85rem; cursor: pointer;"></i>
+                </div>
+            </div>
+
+
+
+            <div id="chat-floating-conversations" class="chat-conversations-list">
+                <div style="padding: 20px; text-align: center; color: #666;">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Chat Panel -->
+        <div id="chat-floating-chat-panel" style="display: none; flex-direction: column; height: 100%;">
+            <div class="chat-panel-header">
+                <div class="chat-panel-header-left">
+                    <button id="chat-floating-back" class="chat-panel-back-btn" title="Back"><i class="fas fa-arrow-left"></i></button>
+                    <span id="chat-floating-name" class="chat-panel-name">User</span>
+                </div>
+                <div>
+                    <button class="chat-header-btn delete-chat-btn" style="color: #ef4444; display: none;" title="Delete Chat"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+            <div id="chat-floating-messages" class="chat-messages-area">
+            </div>
+            <div class="chat-input-container">
+                <form id="chat-floating-form" class="chat-input-form">
+                    <input type="text" id="chat-floating-input" class="chat-input-field" placeholder="Type a message..." autocomplete="off">
+                    <button type="submit" class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% block extra_js %}
+    <script src="{% static 'js/chat.js' %}?v=4"></script>
+    <script>
+        function showAuthNotification(e, action) {
+            e.preventDefault();
+            const actionText = action === 'apply' ? 'apply for a job' : 'post a job';
+            Swal.fire({
+                icon: 'warning',
+                title: 'Account Required',
+                text: `You need to sign in or create an account to ${actionText}.`,
+                showCancelButton: true,
+                confirmButtonText: 'Log In',
+                cancelButtonText: 'Close',
+                confirmButtonColor: 'var(--primary-color)'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = "{% url 'auth_app:login' %}";
+                }
+            });
+        }
+    </script>
+    {% endblock %}
+</body>
+</html>

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Review Application | Job Board Platform{% endblock %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 800px; margin: 2rem auto;">
+    <div class="card">
+        <a href="{% url 'auth_app:dashboard' %}" style="display: inline-block; margin-bottom: 1.5rem; color: var(--text-secondary); text-decoration: none; font-weight: 500;">
+            &larr; Back to Dashboard
+        </a>
+
+        <h2 style="margin-bottom: 1.5rem;">Review Application</h2>
+        
+        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+            <p><strong>Candidate:</strong> {{ application.candidate.username }} ({{ application.candidate.email }})</p>
+            <p><strong>Applied for:</strong> {{ application.job.title }}</p>
+            <p><strong>Date:</strong> {{ application.applied_at|date:"M d, Y" }}</p>
+            <p><strong>Current Status:</strong> <span class="badge" style="background: #e2e8f0; color: #475569;">{{ application.get_status_display }}</span></p>
+        </div>
+
+        <h3 style="margin-bottom: 1rem;">Cover Letter</h3>
+        <div style="background: white; border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; white-space: pre-wrap;">{{ application.cover_letter }}</div>
+
+        <h3 style="margin-bottom: 1rem;">Resume</h3>
+        <div style="margin-bottom: 2rem;">
+            {% if application.resume %}
+                <a href="{{ application.resume.url }}" target="_blank" class="btn btn-primary" style="background-color: #4b5563;">Download Resume</a>
+            {% else %}
+                <p class="text-secondary">No resume attached.</p>
+            {% endif %}
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 2rem;">
+            <h3 style="margin-bottom: 1rem;">Action</h3>
+            <form method="POST" style="display: flex; gap: 1rem;">
+                {% csrf_token %}
+                <button type="submit" name="status" value="accepted" class="btn btn-primary" style="background-color: #10b981; border-color: #10b981;">Accept Candidate</button>
+                <button type="submit" name="status" value="rejected" class="btn btn-primary" style="background-color: #ef4444; border-color: #ef4444;">Reject</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

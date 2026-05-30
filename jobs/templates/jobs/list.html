@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Job Listings | Job Board Platform{% endblock %}
+
+{% block content %}
+<div class="dashboard-header" style="text-align: center; margin-bottom: 3rem;">
+    <h1 style="font-size: 2rem;">Explore Job Opportunities</h1>
+    <p class="text-secondary">Find a job that suits your skills and expertise.</p>
+</div>
+
+<div style="max-width: 600px; margin: 0 auto 3rem auto;">
+    <form method="GET" action="{% url 'jobs:list' %}" style="display: flex; gap: 0.5rem;">
+        <input type="text" name="q" value="{{ query }}" placeholder="Search by job title, location, or keywords..." class="form-control" style="flex: 1;">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+</div>
+
+<div>
+    {% if jobs %}
+        <div class="grid" style="gap: 1.5rem;">
+            {% for job in jobs %}
+                <div class="card" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="flex: 1;">
+                        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">
+                            <a href="{% url 'jobs:detail' job.id %}" style="color: var(--text-primary); text-decoration: none;">{{ job.title }}</a>
+                        </h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 0.5rem; font-size: 0.9rem;">
+                            <span style="font-weight: 500; color: var(--primary-color);">{{ job.employer.username }}</span> &bull; 📍 {{ job.location }}
+                        </p>
+                        <p style="color: var(--text-secondary); margin: 1rem 0; font-size: 0.95rem; max-width: 800px;">
+                            {{ job.description|truncatewords:25 }}
+                        </p>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                            <span class="badge" style="background: #E5E7EB; color: #4B5563;">{{ job.get_job_type_display }}</span>
+                            <span style="font-weight: 600; color: var(--secondary-color); font-size: 0.95rem;">
+                                ${{ job.salary_min|default:"N/A" }} - ${{ job.salary_max|default:"N/A" }}
+                            </span>
+                        </div>
+                    </div>
+                    <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; height: 100%;">
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">Posted: {{ job.created_at|date:"M d, Y" }}</p>
+                        <a href="{% url 'jobs:detail' job.id %}" class="btn btn-primary">View Details</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 4rem;">
+            <p class="text-secondary" style="font-size: 1.1rem;">No jobs available at the moment. Please check back later.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | Job Board{% endblock %}
+
+{% block content %}
+<div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h1 style="color: #991B1B;">🔐 Admin Interface</h1>
+        <p class="text-secondary">System-wide statistics and management.</p>
+    </div>
+    <div style="display: flex; gap: 1rem;">
+        <a href="/admin/jobs/job/" class="btn btn-secondary">Manage Jobs</a>
+        <a href="/admin/applications/application/" class="btn btn-secondary">Manage Applications</a>
+        <a href="/admin/users/user/" class="btn btn-secondary">Manage Users</a>
+        <a href="/admin/" class="btn btn-primary">Django Admin</a>
+    </div>
+</div>
+
+<div class="grid grid-cols-3">
+    <div class="stat-card" style="border-top: 4px solid var(--primary-color);">
+        <h3>Total Jobs</h3>
+        <div class="value">{{ total_jobs }}</div>
+    </div>
+    <div class="stat-card" style="border-top: 4px solid var(--secondary-color);">
+        <h3>Total Applications</h3>
+        <div class="value">{{ total_applications }}</div>
+    </div>
+    <div class="stat-card" style="border-top: 4px solid #F59E0B;">
+        <h3>Total Users</h3>
+        <div class="value">{{ total_users }}</div>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 2rem;">
+    <h2>Recent Jobs Posted</h2>
+    {% if recent_jobs %}
+        <div style="overflow-x: auto; margin-top: 1rem;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Employer</th>
+                        <th>Location</th>
+                        <th>Posted At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in recent_jobs %}
+                        <tr>
+                            <td>{{ job.title }}</td>
+                            <td>{{ job.employer.username }}</td>
+                            <td>{{ job.location }}</td>
+                            <td>{{ job.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="/admin/jobs/job/{{ job.id }}/change/" class="btn btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">Edit</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-secondary" style="margin-top: 1rem;">No recent jobs.</p>
+    {% endif %}
+</div>
+
+<div class="card" style="margin-top: 2rem;">
+    <h2>Recent Applications</h2>
+    {% if recent_applications %}
+        <div style="overflow-x: auto; margin-top: 1rem;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Job Title</th>
+                        <th>Status</th>
+                        <th>Applied At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in recent_applications %}
+                        <tr>
+                            <td>{{ app.candidate.username }}</td>
+                            <td>{{ app.job.title }}</td>
+                            <td><span class="badge badge-{{ app.status }}">{{ app.get_status_display }}</span></td>
+                            <td>{{ app.applied_at|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="/admin/applications/application/{{ app.id }}/change/" class="btn btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">Review</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-secondary" style="margin-top: 1rem;">No recent applications.</p>
+    {% endif %}
+</div>
+{% endblock %}

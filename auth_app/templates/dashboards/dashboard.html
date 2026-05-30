@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Job Board{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Welcome, {{ user.username }}</h1>
+    <p class="text-secondary">Here is an overview of your {{ role }} account.</p>
+</div>
+
+{% if role == 'employer' %}
+<div class="grid grid-cols-3">
+    <div class="stat-card">
+        <h3>Total Jobs Posted</h3>
+        <div class="value">{{ total_jobs }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Total Applications</h3>
+        <div class="value">{{ total_applications }}</div>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 2rem;">
+    <h2>My Posted Jobs</h2>
+    {% if jobs %}
+    <div style="overflow-x: auto; margin-top: 1.5rem;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Location</th>
+                    <th>Date Posted</th>
+                    <th>Applications</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td><a href="{% url 'jobs:detail' job.id %}" style="color: var(--primary-color); font-weight: 500;">{{ job.title }}</a></td>
+                    <td>{{ job.location }}</td>
+                    <td>{{ job.created_at|date:"M d, Y" }}</td>
+                    <td><span class="badge" style="background: #e2e8f0; color: #475569;">{{ job.applications.count }}</span></td>
+                    <td><a href="{% url 'jobs:applicants' job.id %}" class="btn btn-secondary">View Applicants</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-secondary" style="margin-top: 1.5rem;">You haven't posted any jobs yet.</p>
+    {% endif %}
+</div>
+
+<div class="card" style="margin-top: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2>Recent Applications</h2>
+        <a href="{% url 'jobs:create' %}" class="btn btn-primary">Post a New Job</a>
+    </div>
+    
+    {% if recent_applications %}
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Candidate</th>
+                    <th>Job Title</th>
+                    <th>Status</th>
+                    <th>Applied At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in recent_applications %}
+                <tr>
+                    <td>{{ app.candidate.username }}</td>
+                    <td>{{ app.job.title }}</td>
+                    <td><span class="badge badge-{{ app.status }}">{{ app.get_status_display }}</span></td>
+                    <td>{{ app.applied_at|date:"M d, Y" }}</td>
+                    <td>
+                        <a href="{% url 'applications:review' app.id %}" class="btn btn-secondary">Review</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-secondary">No applications received yet.</p>
+    {% endif %}
+</div>
+
+{% elif role == 'candidate' %}
+<div class="grid grid-cols-3">
+    <div class="stat-card">
+        <h3>Total Applications</h3>
+        <div class="value">{{ total_applications }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Pending</h3>
+        <div class="value">{{ pending_applications }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Accepted</h3>
+        <div class="value" style="color: var(--secondary-color);">{{ accepted_applications }}</div>
+    </div>
+</div>
+
+{% if notifications %}
+<div class="card" style="margin-top: 2rem; border-left: 4px solid var(--primary-color);">
+    <h3 style="margin-bottom: 1rem; color: var(--primary-color);">🔔 Recent Notifications</h3>
+    <ul style="list-style: none; padding: 0;">
+        {% for notification in notifications %}
+        <li style="padding: 1rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 0.5rem;">
+            {{ notification.message }}
+            <span style="display: block; font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem;">{{ notification.created_at|date:"M d, Y H:i" }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="card" style="margin-top: 2rem;">
+    <h2>My Applications</h2>
+    
+    {% if applications %}
+    <div style="overflow-x: auto; margin-top: 1.5rem;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Job Title</th>
+                    <th>Employer</th>
+                    <th>Status</th>
+                    <th>Applied At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr>
+                    <td><a href="{% url 'jobs:detail' app.job.id %}" style="color: var(--primary-color); font-weight: 500;">{{ app.job.title }}</a></td>
+                    <td>{{ app.job.employer.username }}</td>
+                    <td><span class="badge badge-{{ app.status }}">{{ app.get_status_display }}</span></td>
+                    <td>{{ app.applied_at|date:"M d, Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 3rem 0;">
+        <p class="text-secondary" style="margin-bottom: 1rem;">You haven't applied to any jobs yet.</p>
+        <a href="{% url 'jobs:list' %}" class="btn btn-primary">Browse Jobs</a>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

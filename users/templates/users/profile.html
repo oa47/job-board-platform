@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile | Job Board Platform{% endblock %}
+
+{% block content %}
+<style>
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+        align-items: start;
+        margin-top: 1.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .profile-sidebar {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .profile-large-avatar-container {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin-bottom: 1.25rem;
+    }
+
+    .profile-large-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: var(--shadow-md);
+        border: 3px solid white;
+    }
+
+    .profile-large-avatar-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: #e0f2fe;
+        color: #0369a1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 3rem;
+        box-shadow: var(--shadow-md);
+        border: 3px solid white;
+    }
+
+    .form-section {
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-section:last-of-type {
+        border-bottom: none;
+        padding-bottom: 0;
+        margin-bottom: 0;
+    }
+
+    .form-section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    @media (max-width: 576px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="dashboard-header">
+    <h1>Profile Settings</h1>
+    <p class="text-secondary">Manage your personal information, profile picture, and application settings.</p>
+</div>
+
+<div class="profile-grid">
+    <!-- Left Column: Summary Card -->
+    <div class="card profile-sidebar">
+        <div class="profile-large-avatar-container">
+            {% if profile.profile_picture %}
+                <img src="{{ profile.profile_picture.url }}" class="profile-large-avatar" alt="{{ user.username }}">
+            {% else %}
+                <div class="profile-large-avatar-placeholder">{{ user.username|slice:":1"|upper }}</div>
+            {% endif %}
+        </div>
+        <h2 style="font-size: 1.3rem; margin-bottom: 0.25rem;">{{ profile.full_name|default:user.username }}</h2>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.75rem;">@{{ user.username }}</p>
+        
+        <span class="badge" style="background-color: {% if user.role == 'employer' %}#dbeafe{% else %}#d1fae5{% endif %}; color: {% if user.role == 'employer' %}#1e40af{% else %}#065f46{% endif %}; font-size: 0.8rem; padding: 0.4rem 1rem;">
+            {{ user.get_role_display|default:user.role|title }}
+        </span>
+
+        <div style="border-top: 1px solid var(--border-color); width: 100%; margin-top: 1.5rem; padding-top: 1rem; font-size: 0.85rem; color: var(--text-secondary); text-align: left;">
+            <p style="margin-bottom: 0.5rem;"><i class="far fa-envelope" style="width: 20px;"></i> {{ user.email|default:"No email set" }}</p>
+            <p><i class="far fa-calendar-alt" style="width: 20px;"></i> Joined {{ user.date_joined|date:"M Y" }}</p>
+        </div>
+    </div>
+
+    <!-- Right Column: Edit Forms -->
+    <div class="card">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Section 1: Account Info -->
+            <div class="form-section">
+                <h3 class="form-section-title"><i class="far fa-user-circle"></i> Account Information</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="{{ user_form.first_name.id_for_label }}">First Name</label>
+                        {{ user_form.first_name }}
+                        {% if user_form.first_name.errors %}
+                            <span class="text-danger small">{{ user_form.first_name.errors.as_text }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ user_form.last_name.id_for_label }}">Last Name</label>
+                        {{ user_form.last_name }}
+                        {% if user_form.last_name.errors %}
+                            <span class="text-danger small">{{ user_form.last_name.errors.as_text }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 0.5rem;">
+                    <label for="{{ user_form.email.id_for_label }}">Email Address</label>
+                    {{ user_form.email }}
+                    {% if user_form.email.errors %}
+                        <span class="text-danger small">{{ user_form.email.errors.as_text }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Section 2: Profile Details -->
+            <div class="form-section">
+                <h3 class="form-section-title"><i class="far fa-id-card"></i> Profile Details</h3>
+                <div class="form-group">
+                    <label for="{{ profile_form.full_name.id_for_label }}">Display/Full Name</label>
+                    {{ profile_form.full_name }}
+                    <span class="text-secondary small" style="display: block; margin-top: 4px;">This name will be visible on your posts and applications.</span>
+                    {% if profile_form.full_name.errors %}
+                        <span class="text-danger small">{{ profile_form.full_name.errors.as_text }}</span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ profile_form.bio.id_for_label }}">Bio / Description</label>
+                    {{ profile_form.bio }}
+                    {% if profile_form.bio.errors %}
+                        <span class="text-danger small">{{ profile_form.bio.errors.as_text }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Section 3: Media Uploads -->
+            <div class="form-section">
+                <h3 class="form-section-title"><i class="far fa-images"></i> Media & Uploads</h3>
+                
+                <div class="form-group">
+                    <label for="{{ profile_form.profile_picture.id_for_label }}">Profile Picture</label>
+                    <div style="margin-top: 8px;">
+                        {{ profile_form.profile_picture }}
+                    </div>
+                    {% if profile_form.profile_picture.errors %}
+                        <span class="text-danger small">{{ profile_form.profile_picture.errors.as_text }}</span>
+                    {% endif %}
+                </div>
+
+                {% if user.role == 'candidate' %}
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label for="{{ profile_form.resume.id_for_label }}">Resume Document</label>
+                    <div style="margin-top: 8px;">
+                        {{ profile_form.resume }}
+                    </div>
+                    {% if profile.resume %}
+                        <div style="margin-top: 10px; background-color: #f8f9fa; padding: 10px 15px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+                            <span style="font-size: 0.85rem; color: var(--text-secondary);"><i class="far fa-file-pdf" style="color: #ef4444; margin-right: 6px;"></i> Current Resume Uploaded</span>
+                            <a href="{{ profile.resume.url }}" target="_blank" class="btn btn-secondary" style="padding: 0.3rem 0.75rem; font-size: 0.8rem;">View Resume</a>
+                        </div>
+                    {% endif %}
+                    {% if profile_form.resume.errors %}
+                        <span class="text-danger small">{{ profile_form.resume.errors.as_text }}</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.5rem;">
+                {% if user.role == 'employer' or user.is_superuser %}
+                    <a href="{% url 'custom_admin:dashboard' %}" class="btn btn-secondary">Cancel</a>
+                {% else %}
+                    <a href="{% url 'auth_app:dashboard' %}" class="btn btn-secondary">Cancel</a>
+                {% endif %}
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
