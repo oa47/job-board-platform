@@ -47,6 +47,13 @@ DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = ['*']
 
+# CSRF Trusted Origins for Render
+CSRF_TRUSTED_ORIGINS = [
+    'https://job-board-platform-tfsk.onrender.com',
+]
+if env('RENDER_EXTERNAL_HOSTNAME', default=None):
+    CSRF_TRUSTED_ORIGINS.append(f"https://{env('RENDER_EXTERNAL_HOSTNAME')}")
+
 
 # Application definition
 
