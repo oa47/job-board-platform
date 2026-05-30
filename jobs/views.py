@@ -9,7 +9,7 @@ from .forms import JobForm
 class JobListView(View):
     def get(self, request):
         query = request.GET.get('q', '')
-        jobs = Job.objects.all().select_related('employer')
+        jobs = Job.objects.filter(is_active=True).select_related('employer')
         
         if query:
             from django.db.models import Q
@@ -37,7 +37,7 @@ class JobDetailView(View):
 
 def index(request):
     """Home page showing featured jobs"""
-    jobs = Job.objects.select_related('employer').order_by('-created_at')[:6]
+    jobs = Job.objects.filter(is_active=True).select_related('employer').order_by('-created_at')[:6]
     context = {
         'jobs': jobs,
     }
@@ -83,3 +83,27 @@ class JobApplicantsView(LoginRequiredMixin, View):
             'applications': applications,
         }
         return render(request, 'jobs/applicants.html', context)
+
+
+class JobDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        if getattr(request.user, 'role', '') != 'employer':
+            return redirect('auth_app:dashboard')
+        
+        job = get_object_or_404(Job, pk=pk, employer=request.user)
+        job.delete()
+        messages.success(request, "Job posting permanently deleted.")
+        return redirect('auth_app:dashboard')
+
+
+class JobToggleStatusView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        if getattr(request.user, 'role', '') != 'employer':
+            return redirect('auth_app:dashboard')
+        
+        job = get_object_or_404(Job, pk=pk, employer=request.user)
+        job.is_active = not job.is_active
+        job.save()
+        status_msg = "activated" if job.is_active else "closed"
+        messages.success(request, f"Job has been {status_msg}.")
+        return redirect('auth_app:dashboard')

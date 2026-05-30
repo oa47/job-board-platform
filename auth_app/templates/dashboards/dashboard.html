@@ -37,11 +37,30 @@
             <tbody>
                 {% for job in jobs %}
                 <tr>
-                    <td><a href="{% url 'jobs:detail' job.id %}" style="color: var(--primary-color); font-weight: 500;">{{ job.title }}</a></td>
+                    <td>
+                        <a href="{% url 'jobs:detail' job.id %}" style="color: var(--primary-color); font-weight: 500;">{{ job.title }}</a>
+                        {% if not job.is_active %}
+                        <span class="badge" style="background: #ef4444; color: white; font-size: 0.7rem; margin-left: 0.5rem;">Closed</span>
+                        {% else %}
+                        <span class="badge" style="background: #10b981; color: white; font-size: 0.7rem; margin-left: 0.5rem;">Active</span>
+                        {% endif %}
+                    </td>
                     <td>{{ job.location }}</td>
                     <td>{{ job.created_at|date:"M d, Y" }}</td>
                     <td><span class="badge" style="background: #e2e8f0; color: #475569;">{{ job.applications.count }}</span></td>
-                    <td><a href="{% url 'jobs:applicants' job.id %}" class="btn btn-secondary">View Applicants</a></td>
+                    <td style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <a href="{% url 'jobs:applicants' job.id %}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Applicants</a>
+                        <form action="{% url 'jobs:toggle_status' job.id %}" method="post" style="margin: 0;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn {% if job.is_active %}btn-secondary{% else %}btn-primary{% endif %}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; border: 1px solid #cbd5e1;">
+                                {% if job.is_active %}Close{% else %}Reopen{% endif %}
+                            </button>
+                        </form>
+                        <form action="{% url 'jobs:delete' job.id %}" method="post" onsubmit="return confirm('WARNING: Are you sure you want to completely delete this job? All applications for this job will also be permanently deleted!');" style="margin: 0;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn" style="background-color: #ef4444; color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem; border: none;">Delete</button>
+                        </form>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

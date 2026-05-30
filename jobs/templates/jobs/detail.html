@@ -11,7 +11,12 @@
     <div style="display: flex; gap: 2rem; align-items: flex-start;">
         <div style="flex: 1;">
             <div class="card" style="margin-bottom: 2rem; padding: 2rem;">
-                <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ job.title }}</h1>
+                <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">
+                    {{ job.title }}
+                    {% if not job.is_active %}
+                    <span class="badge" style="background: #ef4444; color: white; font-size: 1rem; margin-left: 0.5rem; vertical-align: middle;">Closed</span>
+                    {% endif %}
+                </h1>
                 <p style="font-size: 1.1rem; color: var(--primary-color); font-weight: 500; margin-bottom: 1.5rem;">{{ job.employer.username }}</p>
                 
                 <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
@@ -26,13 +31,17 @@
                 </div>
 
                 <div style="margin-top: 3rem;">
-                    {% if user.is_authenticated and user.role == 'employer' %}
-                        <!-- Employers cannot apply, so show nothing -->
+                    {% if not job.is_active %}
+                        <div style="background: #fef3c7; color: #b45309; padding: 1rem; border-radius: 8px; font-weight: 500;">This job posting has been closed by the employer and is no longer accepting applications.</div>
                     {% else %}
-                        {% if user.is_authenticated %}
-                            <a href="{% url 'applications:apply' job.id %}" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1.1rem;">Apply Now</a>
+                        {% if user.is_authenticated and user.role == 'employer' %}
+                            <!-- Employers cannot apply, so show nothing -->
                         {% else %}
-                            <a href="#" onclick="showAuthNotification(event, 'apply')" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1.1rem;">Apply Now</a>
+                            {% if user.is_authenticated %}
+                                <a href="{% url 'applications:apply' job.id %}" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1.1rem;">Apply Now</a>
+                            {% else %}
+                                <a href="#" onclick="showAuthNotification(event, 'apply')" class="btn btn-primary" style="padding: 0.75rem 2rem; font-size: 1.1rem;">Apply Now</a>
+                            {% endif %}
                         {% endif %}
                     {% endif %}
                 </div>

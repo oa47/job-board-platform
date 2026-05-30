@@ -46,6 +46,7 @@
                             icon: '{% if message.tags == "error" %}error{% elif message.tags == "warning" %}warning{% elif message.tags == "info" %}info{% else %}success{% endif %}',
                             title: '{{ message|escapejs }}',
                             showConfirmButton: false,
+                            showCloseButton: true,
                             timer: 4000,
                             timerProgressBar: true
                         });
